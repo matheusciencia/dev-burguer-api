@@ -2,7 +2,6 @@ import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 import * as Yup from 'yup';
 
-
 class SessionController {
   async store(req, res) {
     const schema = Yup.object({
@@ -12,7 +11,9 @@ class SessionController {
 
     const isValid = await schema.isValid(req.body, { strict: true });
 
-    const genericError = () => { return res.status(401).json({ error: 'E-mail or password is invalid' })};
+    const genericError = () => {
+      return res.status(401).json({ error: 'E-mail or password is invalid' });
+    };
 
     if (!isValid) {
       genericError();
@@ -26,18 +27,23 @@ class SessionController {
       genericError();
     }
 
-    const validPassword = await bcrypt.compare(password, existingUser.password_hash);
+    const validPassword = await bcrypt.compare(
+      password,
+      existingUser.password_hash,
+    );
 
     if (!validPassword) {
       genericError();
     }
 
-    return res.status(200).json({ 
-        id: existingUser.id,
-        name: existingUser.name,
-        email: existingUser.email,
-        admin: existingUser.admin,
-     });
+    console.log('Usuário logado com sucesso');
+
+    return res.status(200).json({
+      id: existingUser.id,
+      name: existingUser.name,
+      email: existingUser.email,
+      admin: existingUser.admin,
+    });
   }
 }
 
