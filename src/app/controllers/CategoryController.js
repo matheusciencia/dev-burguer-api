@@ -1,14 +1,10 @@
 import * as Yup from 'yup';
-import Product from '../models/Products.js';
 import Category from '../models/Category.js';
 
-class ProductController {
+class CategoryController {
   async store(req, res) {
     const schema = Yup.object({
       name: Yup.string().required(),
-      price: Yup.number().required(),
-      category_id: Yup.number().required(),
-      offer: Yup.boolean(),
     });
 
     try {
@@ -20,26 +16,30 @@ class ProductController {
         .json({ error: 'Validation failed', messages: error.errors });
     }
 
-    const { name, price, category_id, offer } = req.body;
+    const { name } = req.body;
     const { filename } = req.file;
 
-    const newProduct = await Product.create({
-      name,
-      price,
-      category_id,
-      path: filename,
-      offer,
+    const existingCategory = await Category.findOne({
+      where: {
+        name,
+      },
     });
 
-    return res.status(201).json(newProduct);
+    if (existingCategory) {
+      return res.status(401).json({ error: 'Category already exists' });
+    }
+
+    const newCategory = await Category.create({
+      name,
+      path: filename,
+    });
+
+    return res.status(201).json(newCategory);
   }
 
   async update(req, res) {
     const schema = Yup.object({
       name: Yup.string(),
-      price: Yup.number(),
-      category_id: Yup.number(),
-      offer: Yup.boolean(),
     });
 
     try {
@@ -50,8 +50,8 @@ class ProductController {
         .status(400)
         .json({ error: 'Validation failed', messages: error.errors });
     }
-    const { id } = req.params;
-    const { name, price, category_id, offer } = req.body;
+
+    const { name } = req.body;
 
     let path;
 
@@ -60,40 +60,31 @@ class ProductController {
       path = filename;
     }
 
-    await Product.update(
-      {
+    const existingCategory = await Category.findOne({
+      where: {
         name,
-        price,
-        category_id,
-        path,
-        offer,
       },
-      {
-        where: {
-          id,
-        },
-      },
-    );
+    });
+
+    if (existingCategory) {
+      return res.status(401).json({ error: 'Category already exists' });
+    }
+
+    await Category.update({
+      name,
+      path,
+    });
 
     return res.status(200).json();
   }
 
   async index(_req, res) {
-    const products = await Product.findAll(
-      {
-        include: {
-          model: Category,
-          as: 'category',
-          attributes: ['id', 'name'],
-        },
-      },
-      {},
-    );
+    const categories = await Category.findAll();
 
     console.log(_req.userId);
 
-    return res.status(200).json(products);
+    return res.status(200).json(categories);
   }
 }
 
-export default new ProductController();
+export default new CategoryController();
