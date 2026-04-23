@@ -51,6 +51,7 @@ class CategoryController {
         .json({ error: 'Validation failed', messages: error.errors });
     }
 
+    const { id } = req.params;
     const { name } = req.body;
 
     let path;
@@ -60,20 +61,29 @@ class CategoryController {
       path = filename;
     }
 
-    const existingCategory = await Category.findOne({
-      where: {
-        name,
-      },
-    });
+    if (name) {
+      const existingCategory = await Category.findOne({
+        where: {
+          name,
+        },
+      });
 
-    if (existingCategory) {
-      return res.status(401).json({ error: 'Category already exists' });
+      if (existingCategory && existingCategory.id !== Number(id)) {
+        return res.status(401).json({ error: 'Category already exists' });
+      }
     }
 
-    await Category.update({
-      name,
-      path,
-    });
+    await Category.update(
+      {
+        name,
+        path,
+      },
+      {
+        where: {
+          id,
+        },
+      },
+    );
 
     return res.status(200).json();
   }

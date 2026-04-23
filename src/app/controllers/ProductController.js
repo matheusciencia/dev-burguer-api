@@ -4,6 +4,8 @@ import Category from '../models/Category.js';
 
 class ProductController {
   async store(req, res) {
+    req.body.price = req.body.price?.replace(',', '.');
+
     const schema = Yup.object({
       name: Yup.string().required(),
       price: Yup.number().required(),
@@ -35,6 +37,8 @@ class ProductController {
   }
 
   async update(req, res) {
+    req.body.price = req.body.price?.replace(',', '.');
+
     const schema = Yup.object({
       name: Yup.string(),
       price: Yup.number(),
